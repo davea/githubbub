@@ -1,0 +1,4 @@
+github3.py==0.9.3
+PyYAML==3.11
+tinycss==0.3
+unicornhat==2.0.4

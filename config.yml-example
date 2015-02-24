@@ -1,0 +1,36 @@
+# Rotation of the display in degrees.
+# Assuming a Pi B+/A+ or Pi 2 B,
+# 0 degrees is with the USB ports on the right.
+ROTATION: 180
+
+# The brightness of the LEDs, between 0.0 and 1.0.
+# Heed the warning:
+# https://github.com/pimoroni/unicorn-hat/blob/master/EXTREMELY_IMPORTANT_WARNINGS.txt
+BRIGHTNESS: 0.1
+
+# How long to wait between refreshes of the event stream.
+REFRESH_SECONDS: 15
+
+# The OAuth token to use. Generated either via the normal OAuth flow,
+# or a 'Personal access token' generated on
+# https://github.com/settings/applications
+GITHUB_TOKEN: ""
+
+# The GitHub name of the organisation to display activity for.
+# NB: The user that's logged in with the above token must be a member of this org.
+GITHUB_ORG: ""
+
+# Each event type can have its own colour.
+# Colours are specified in CSS format.
+# Event types are listed here: https://developer.github.com/v3/activity/events/types/
+# Drop the 'Event' suffix from the GitHub event name before including here.
+EVENT_COLOURS:
+    IssueComment: "rgb(132, 132, 0)" # yellow
+    Issues: "rgb(132, 132, 132)" # white
+    PullRequest: "rgb(132, 0, 132)" # magenta
+    PullRequestReviewComment: "rgb(0, 132, 132)" # cyan
+    Push: "rgb(0, 132, 0)" # green
+    Create: "rgb(132, 96, 0)" # orange
+    Delete: "rgb(132, 0, 0)" # red
+    Fork: "#423116" # brown ?
+    CommitComment: "rgb(132, 132, 0)" # yellow
