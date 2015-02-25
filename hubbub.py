@@ -15,7 +15,15 @@ from attrdict import AttrDict
 COLS = 8
 ROWS = 8
 
-class StreamView(object):
+class BaseView(object):
+    max_events = COLS * ROWS
+    def add_events(self, events):
+        pass
+
+    def render(self):
+        pass
+
+class StreamView(BaseView):
     def __init__(self, manager):
         self.manager = manager
         self.events = []
@@ -35,15 +43,22 @@ class StreamView(object):
         return r, g, b
 
     def add_events(self, events):
-        if events:
-            self.events += events
-            self.events.sort(key=attrgetter('id'))
-            print "Added {} new events to StreamView".format(len(events))
+        for event in events[-self.max_events:]:
+            self.add_event(event)
+        print "Added {} new events to StreamView".format(len(events))
+
+    def add_event(self, event):
+        if len(self.events) >= ROWS * COLS:
+            new_length = COLS * (ROWS - 1)
+            self.events = self.events[-new_length:]
+        self.events.append(event)
+        self.events.sort(key=attrgetter('created_at'))
 
     def render(self):
         if not self.events:
             return
         print "Rendering events:"
+        unicornhat.clear()
         count = ROWS * COLS
         for i, event in enumerate(self.events[-count:]):
             x = i % COLS
