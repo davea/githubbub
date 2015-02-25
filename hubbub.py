@@ -2,11 +2,13 @@
 import time
 import os
 from operator import attrgetter
+from itertools import islice
 
 import unicornhat
 from github3 import login
 import yaml
 import tinycss.color3
+from requests.exceptions import RequestException
 
 from attrdict import AttrDict
 
@@ -62,13 +64,17 @@ class EventsManager(object):
         self.events_iterator = self.user.iter_org_events(self.config.GITHUB_ORG)
         self.view = StreamView(manager=self)
         self.all_events = []
-        self.seen_events = set()
+        self.seen_event_ids = set()
 
     def _load_new_events(self):
         print "Loading events:"
-        new_events = [e for e in self.events_iterator if e not in self.seen_events]
+        try:
+            new_events = [e for e in islice(self.events_iterator, self.view.max_events) if e.id not in self.seen_event_ids]
+        except RequestException:
+            print "   failed."
+            return []
         self.all_events += new_events
-        self.seen_events.update()
+        self.seen_event_ids.update(set([e.id for e in new_events]))
         self.events_iterator.refresh(True)
         print "   done. {} available".format(len(self.all_events))
         return new_events
