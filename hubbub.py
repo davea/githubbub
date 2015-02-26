@@ -86,11 +86,13 @@ class PunchcardView(BaseView):
         unicornhat.clear()
         # Do a bit of colour cycling to indicate an update
         new_hue = randint(0, 359)
-        for hue in range(min(self.hue, new_hue), max(self.hue, new_hue)+1):
+        if new_hue < self.hue:
+            new_hue += 360
+        for hue in range(self.hue, new_hue+1):
             for hour in range(start, end):
                 y = hour - start
                 for x in range(COLS):
-                    h = hue / 360.0
+                    h = (hue % 360) / 360.0
                     s = 1.0
                     # Cap lightness so the brightest pixel isn't quite white
                     v = min(0.8, punchcard[hour][x] / max_value)
@@ -102,7 +104,7 @@ class PunchcardView(BaseView):
                     r, g, b = (int(round(i * 255)) for i in (r, g, b))
                     unicornhat.set_pixel(x, y, r, g, b)
             unicornhat.show()
-        self.hue = new_hue
+        self.hue = new_hue % 360
         print "   done."
 
 
