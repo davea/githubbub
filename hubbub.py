@@ -15,13 +15,16 @@ from attrdict import AttrDict
 COLS = 8
 ROWS = 8
 
+
 class BaseView(object):
     max_events = COLS * ROWS
+
     def add_events(self, events):
         pass
 
     def render(self):
         pass
+
 
 class StreamView(BaseView):
     def __init__(self, manager):
@@ -30,7 +33,11 @@ class StreamView(BaseView):
 
     def _parse_colour(self, colour):
         """Parse a CSS colour into a unicornhat-friendly (r, g, b) tuple"""
-        r, g, b, _ = [int(round(255*v)) for v in tinycss.color3.parse_color_string(colour)]
+        r, g, b, _ = [
+            int(round(255*v))
+            for v
+            in tinycss.color3.parse_color_string(colour)
+        ]
         return r, g, b
 
     def _event_colour(self, event):
@@ -69,22 +76,28 @@ class StreamView(BaseView):
         print "   done."
 
 
-
 class EventsManager(object):
     seen_events = None
     all_events = None
+
     def __init__(self, config, user):
         self.config = config
         self.user = user
-        self.events_iterator = self.user.iter_org_events(self.config.GITHUB_ORG)
         self.view = StreamView(manager=self)
         self.all_events = []
         self.seen_event_ids = set()
+        org = self.config.GITHUB_ORG
+        self.events_iterator = self.user.iter_org_events(org)
 
     def _load_new_events(self):
         print "Loading events:"
         try:
-            new_events = [e for e in islice(self.events_iterator, self.view.max_events) if e.id not in self.seen_event_ids]
+            new_events = [
+                e
+                for e
+                in islice(self.events_iterator, self.view.max_events)
+                if e.id not in self.seen_event_ids
+            ]
         except RequestException:
             print "   failed."
             return []
@@ -103,7 +116,6 @@ class EventsManager(object):
             time.sleep(self.config.REFRESH_SECONDS)
 
 
-
 def load_config():
     """Load contents of config.yml into an AttrDict"""
     print "Loading config:"
@@ -115,6 +127,7 @@ def load_config():
     print "   done."
     return config
 
+
 def setup_unicorn(config):
     """Initialise unicornhat module with brightness and rotation from config"""
     print "Setting up Unicorn HAT:"
@@ -122,8 +135,12 @@ def setup_unicorn(config):
     unicornhat.rotation(config.ROTATION)
     print "   done."
 
+
 def github_login(config):
-    """Logs into GitHub API with the token from config.yml and returns a User object."""
+    """
+    Logs into GitHub API with the token from config.yml
+    and returns a User object.
+    """
     print "Github API login:"
     gh = login(token=config.GITHUB_TOKEN)
     user = gh.user()
@@ -138,7 +155,6 @@ def main():
 
     manager = EventsManager(config, user)
     manager.run()
-
 
 if __name__ == '__main__':
     main()
