@@ -41,10 +41,45 @@ class StreamView(BaseView):
         ]
         return r, g, b
 
+    def _get_complex_colour(self, event, rules):
+        """
+        Gets a (r,g,b) colour tuple for an event with a complex set of
+        rules defined in config.yml
+        """
+        for key in rules:
+            if key not in event.payload:
+                continue
+            for value, colour in rules[key].items():
+                if event.payload[key] == value:
+                    override = self._get_override_colour(event, rules)
+                    if override:
+                        colour = override
+                    return self._parse_colour(colour)
+
+    def _get_override_colour(self, event, rules):
+        """
+        This is a hack to enable certain events to be coloured based on rules
+        more complex than we can reasonably express in config.yml
+        """
+        # Pull requests that have been closed and merged:
+        if (event.type == "PullRequestEvent" and
+                event.payload['action'] == 'closed' and
+                event.payload['pull_request'].merged_at is not None and
+                rules.get('action', {}).get('merged') is not None):
+            return rules['action']['merged']
+
     def _event_colour(self, event):
-        """Gets a (r,g,b) colour tuple for the current event, based on its type."""
-        colour = self.manager.config.EVENT_COLOURS.get(event.type[:-5], "black")
-        r, g, b = self._parse_colour(colour)
+        """
+        Gets a (r,g,b) colour tuple for the current event, based on its type.
+        """
+        etype = event.type[:-5]
+        colour = self.manager.config.EVENT_COLOURS.get(etype, "black")
+        if isinstance(colour, basestring):
+            r, g, b = self._parse_colour(colour)
+        else:
+            # Some events, such as issues being opened/closed, have a more
+            # complex set of rules to define their colour
+            r, g, b = self._get_complex_colour(event, colour)
         # Brighten events by the logged-in user
         if event.actor == self.manager.user:
             r, g, b = [min(255, int(round(v*1.5))) for v in (r, g, b)]
