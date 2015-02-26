@@ -3,6 +3,7 @@ import time
 import os
 from operator import attrgetter
 from itertools import islice
+from datetime import date
 
 import unicornhat
 from github3 import login
@@ -50,9 +51,16 @@ class StreamView(BaseView):
         return r, g, b
 
     def add_events(self, events):
-        for event in events[-self.max_events:]:
+        today = date.today()
+        filtered_events = [
+            e
+            for e
+            in events[-self.max_events:]
+            if e.created_at.date() == today
+        ]
+        for event in filtered_events:
             self.add_event(event)
-        print "Added {} new events to StreamView".format(len(events))
+        print "Added {} new events to StreamView".format(len(filtered_events))
 
     def add_event(self, event):
         if len(self.events) >= ROWS * COLS:
