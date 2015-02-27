@@ -26,15 +26,17 @@ GITHUB_ORG: ""
 # Drop the 'Event' suffix from the GitHub event name before including here.
 # Events can be coloured by the contents of their 'payload' dict, as
 # illustrated by the Issues and PullRequest keys. The 'merged' colour for
-# PullRequest events is a big ol' hack, see StreamView._get_override_colour in
-# hubbub.py for details.
+# PullRequests and the config for Issues is a big ol' hack,
+# see StreamView._get_override_colour in hubbub.py for details.
 EVENT_COLOURS:
     Issues:
         action:
             opened: "rgb(0, 132, 0)"
             reopened: "rgb(0, 132, 0)"
             closed: "rgb(132, 0, 0)"
-    IssueComment: "rgb(132, 132, 0)"
+    IssueComment:
+        default: "rgb(132, 132, 0)"
+        pull_request: "rgb(132, 96, 0)"
     Push: "rgb(0, 132, 132)"
     Create: "rgb(0, 132, 132)"
     Delete: "rgb(0, 0, 132)"
@@ -42,7 +44,7 @@ EVENT_COLOURS:
         action:
             opened: "rgb(132, 0, 132)"
             closed: "rgb(132, 0, 0)"
-            merged: "#351557"
+            merged: "rgb(80, 32, 131)"
     PullRequestReviewComment: "rgb(132, 96, 0)"
     CommitComment: "rgb(132, 96, 0)"
     Fork: "rgb(132, 132, 132)"

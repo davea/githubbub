@@ -137,14 +137,14 @@ class StreamView(BaseView):
         Gets a (r,g,b) colour tuple for an event with a complex set of
         rules defined in config.yml
         """
+        colour = self._get_override_colour(event, rules)
+        if colour:
+            return self._parse_colour(colour)
         for key in rules:
             if key not in event.payload:
                 continue
             for value, colour in rules[key].items():
                 if event.payload[key] == value:
-                    override = self._get_override_colour(event, rules)
-                    if override:
-                        colour = override
                     return self._parse_colour(colour)
 
     def _get_override_colour(self, event, rules):
@@ -158,6 +158,12 @@ class StreamView(BaseView):
                 event.payload['pull_request'].merged_at is not None and
                 rules.get('action', {}).get('merged') is not None):
             return rules['action']['merged']
+        # Issue comments have a different colour if they're on a pull request
+        if event.type == "IssueCommentEvent":
+            if event.payload['issue'].pull_request is not None:
+                return rules['pull_request']
+            else:
+                return rules['default']
 
     def _event_colour(self, event):
         """
