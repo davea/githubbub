@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import time
 import os
-from operator import attrgetter
 from itertools import islice
 from datetime import date, datetime
 from collections import defaultdict, Counter
@@ -43,6 +42,7 @@ class BaseView(object):
             ]
         for event in events:
             self.add_event(event)
+        print "Added {} events.".format(len(events))
 
     def add_event(self, event):
         self.events.append(event)
@@ -80,8 +80,13 @@ class PunchcardView(BaseView):
     def render(self):
         print "PunchcardView.render:"
         punchcard = self._get_punchcard()
-        max_value = max(v for row in punchcard.values() for v in row.values())
-        max_value = float(max_value)
+        values = [v for row in punchcard.values() for v in row.values()]
+        if not values:
+            unicornhat.clear()
+            unicornhat.show()
+            print "   done (empty)."
+            return
+        max_value = float(max(values))
         end = datetime.utcnow().hour + 1
         start = end - ROWS
         # Boost pixel brightness by this much so quiet times are still visible
@@ -201,11 +206,22 @@ class EventsManager(object):
     def __init__(self, config, user):
         self.config = config
         self.user = user
-        self.view = PunchcardView(manager=self)
+        self.views = [
+            # PunchcardView(manager=self),
+            StreamView(manager=self),
+        ]
+        self.current_view = self.views[0]
         self.all_events = []
         self.seen_event_ids = set()
         org = self.config.GITHUB_ORG
         self.events_iterator = self.user.iter_org_events(org)
+
+    @property
+    def _max_events(self):
+        maxes = [view.max_events for view in self.views]
+        if None in maxes:
+            return None
+        return max(maxes)
 
     def _load_new_events(self):
         print "Loading events:"
@@ -213,13 +229,13 @@ class EventsManager(object):
             new_events = [
                 e
                 for e
-                in islice(self.events_iterator, self.view.max_events)
+                in islice(self.events_iterator, self._max_events)
                 if e.id not in self.seen_event_ids
             ]
         except RequestException:
             print "   failed."
             return []
-        new_events.sort(key=attrgetter('created_at'))
+        new_events.sort(key=lambda e: (e.created_at, e.id))
         self.all_events += new_events
         self.seen_event_ids.update(set([e.id for e in new_events]))
         self.events_iterator.refresh(True)
@@ -230,8 +246,9 @@ class EventsManager(object):
         while True:
             new_events = self._load_new_events()
             if new_events:
-                self.view.add_events(new_events)
-                self.view.render()
+                for view in self.views:
+                    view.add_events(new_events)
+                self.current_view.render()
             time.sleep(self.config.REFRESH_SECONDS)
 
 
