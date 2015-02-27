@@ -9,7 +9,10 @@ from math import floor
 import colorsys
 from random import randint
 
-import unicornhat
+try:
+    import unicornhat
+except ImportError:
+    pass
 from github3 import login
 import yaml
 import tinycss.color3
